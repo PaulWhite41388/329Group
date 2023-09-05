@@ -1,0 +1,88 @@
+import time
+import random
+
+class HVACSystem:
+    def __init__(self):
+        self.mode = None
+        self.temperature = 72  # Default temperature
+        self.wind_resistance = 0  # Default wind resistance
+        self.heater_on = False
+        self.ac_on = False
+
+    def set_mode(self):
+        print("Welcome to the HVAC System!")
+        print("Choose a mode:")
+        print("1. Immersive Mode")
+        print("2. Manual Mode")
+        print("3. Quit")
+        choice = input("Enter your choice (1/2/3): ")
+        if choice == '1':
+            self.mode = "Immersive"
+        elif choice == '2':
+            self.mode = "Manual"
+        elif choice == '3':
+            print("Exiting the HVAC System. Goodbye!")
+            exit()
+        else:
+            print("Invalid choice. Please select 1, 2, or 3.")
+            self.set_mode()
+
+    def immersive_mode(self):
+        while True:
+            # Simulate random sensor readings every 10 seconds
+            time.sleep(10)
+            temp_reading = random.randint(65, 75)  # Simulate temperature range 65°F - 75°F
+            resistance_reading = random.randint(0, 10)  # Simulate wind resistance level 0 - 10
+
+            # Adjust temperature based on sensor readings
+            self.temperature = temp_reading
+            self.wind_resistance = resistance_reading
+
+            # Check and adjust HVAC based on temperature
+            if self.temperature < (self.temperature - 1):
+                self.heater_on = True
+                self.ac_on = False
+            elif self.temperature > (self.temperature + 1):
+                self.ac_on = True
+                self.heater_on = False
+            else:
+                self.heater_on = False
+                self.ac_on = False
+
+            # Display current status
+            print(f"Temperature: {self.temperature}°F")
+            print(f"Wind Resistance: {self.wind_resistance}")
+            if self.heater_on:
+                print("Heater is ON")
+            elif self.ac_on:
+                print("Air Conditioner is ON")
+            else:
+                print("Heater and Air Conditioner are OFF")
+
+            # Check if the user wants to return to the menu
+            return_to_menu = input("Enter '3' to return to the menu: ")
+            if return_to_menu == '3':
+                print("Returning to the main menu.")
+                break
+
+    def manual_mode(self):
+        self.temperature = float(input("Enter your preferred temperature: "))
+        self.wind_resistance = int(input("Enter wind resistance level (0-10): "))
+        self.heater_on = False
+        self.ac_on = False
+
+    def run(self):
+        while True:
+            self.set_mode()
+            if self.mode == "Immersive":
+                self.immersive_mode()
+            elif self.mode == "Manual":
+                self.manual_mode()
+            else:
+                print("Invalid mode.")
+                return
+
+
+if __name__ == "__main__":
+    hvac_system = HVACSystem()
+    hvac_system.run()
