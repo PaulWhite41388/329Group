@@ -3,8 +3,8 @@ import time
 
 class HVACSystem:
     def __init__(self):
-        self.temperature = 72  # Default temperature
-        self.wind_speed = 0  # Default wind speed
+        self.temperature = 22  # Default temperature in Celsius
+        self.wind_speed = 0  # Default wind speed in mph
         self.locations = ["Melbourne", "Sydney", "Brisbane", "Perth", "Adelaide"]
 
     def main_menu(self):
@@ -62,33 +62,33 @@ class HVACSystem:
                 print("Invalid choice. Please select 0, 1, or 2.")
 
     def set_temperature(self):
-        temperature_input = input("Enter desired temperature (press Enter to go back): ")
+        temperature_input = input("Enter desired temperature in Celsius (press Enter to go back): ")
         if temperature_input.strip() == "":
             return
         try:
             self.temperature = float(temperature_input)
-            print(f"Temperature set to {self.temperature}°F")
+            print(f"Temperature set to {self.temperature:.2f}°C")
         except ValueError:
             print("Invalid input. Please enter a valid temperature.")
 
     def set_wind_speed(self):
-        wind_speed_input = input("Enter desired wind speed (press Enter to go back): ")
+        wind_speed_input = input("Enter desired wind speed in mph (press Enter to go back): ")
         if wind_speed_input.strip() == "":
             return
         try:
             self.wind_speed = float(wind_speed_input)
-            print(f"Wind speed set to {self.wind_speed} mph")
+            print(f"Wind speed set to {self.wind_speed:.2f} mph")
         except ValueError:
             print("Invalid input. Please enter a valid wind speed.")
 
     def update_weather(self):
         # Simulate fetching weather data for the selected location
-        self.temperature = random.uniform(65, 75)  # Simulate temperature range 65°F - 75°F
-        self.wind_speed = random.uniform(0, 10)  # Simulate wind speed range 0 - 10 mph
+        self.temperature = random.uniform(18, 24)  # Simulate temperature range 18°C - 24°C
+        self.wind_speed = random.uniform(0, 16)  # Simulate wind speed range 0 - 16 mph
 
     def display_status(self):
         print(f"Weather in {self.location}:")
-        print(f"Temperature: {self.temperature:.2f}°F")
+        print(f"Temperature: {self.temperature:.2f}°C")
         print(f"Wind Speed: {self.wind_speed:.2f} mph")
 
     def run(self):
