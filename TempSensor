@@ -1,1 +1,77 @@
 
+import tkinter as tk
+from tkinter import messagebox
+import time
+
+# GPIO pin connected to the DHT sensor (change this to the actual pin)
+DHT_SENSOR_PIN = 17
+
+# Function to read temperature and humidity data from the DHT sensor
+def read_dht_data():
+    try:
+        with open(f'/sys/class/gpio/gpio{DHT_SENSOR_PIN}/value', 'r') as f:
+            data = f.read()
+        return data
+    except Exception as e:
+        print(f"Error reading data from GPIO pin {DHT_SENSOR_PIN}: {e}")
+        return None
+
+# Simulated air resistance calculation
+def calculate_air_resistance(speed):
+    # Simulate air resistance calculation based on speed
+    # You can use mathematical formulas or lookup tables for a more realistic calculation
+    return 0.01 * speed ** 2  # Placeholder formula
+
+# Simulated fan control
+def control_fan_power(desired_temperature, current_temperature):
+    # Simulate fan control based on temperature difference
+    temperature_difference = desired_temperature - current_temperature
+    if temperature_difference > 0:
+        # If the room is warmer than desired, increase fan power
+        fan_power = min(100, temperature_difference * 10)
+    else:
+        fan_power = 0  # Fan off when temperature is equal or cooler than desired
+    return fan_power
+
+# Function to display information in a pop-up window
+def display_info(desired_temperature, current_temperature, current_speed, air_resistance, fan_power):
+    msg = f"Desired Temperature: {desired_temperature}°C\n"
+    msg += f"Current Temperature: {current_temperature}°C\n"
+    msg += f"Current Speed: {current_speed} km/h\n"
+    msg += f"Air Resistance: {air_resistance}\n"
+    msg += f"Fan Power: {fan_power}%"
+
+    root = tk.Tk()
+    root.deiconify()  # Ensure the window is visible
+    root.withdraw()  # Hide the main window
+    messagebox.showinfo("Temperature Control Info", msg)
+    root.destroy()
+
+# Main program
+if __name__ == "__main__":
+    # User's desired temperature setting (in Celsius)
+    desired_temperature = 22.0
+
+    # Read temperature data from the DHT sensor
+    dht_data = read_dht_data()
+
+    if dht_data is not None:
+        # Temperature reading is successful
+        # Continue with the rest of the code
+
+        # Extract temperature and humidity values (simulated)
+        current_temperature = float(dht_data)  # Change this line to parse the actual data
+
+        # Simulated cycling speed in km/h
+        current_speed = 20.0
+
+        # Calculate air resistance (simulated)
+        air_resistance = calculate_air_resistance(current_speed)
+
+        # Control the fan based on temperature
+        fan_power = control_fan_power(desired_temperature, current_temperature)
+
+        # Display information in a pop-up window
+        display_info(desired_temperature, current_temperature, current_speed, air_resistance, fan_power)
+    else:
+        print("Failed to read temperature data from the sensor.")
