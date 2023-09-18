@@ -1,0 +1,151 @@
+import tkinter as tk
+from tkinter import Label, Button, Toplevel, Menu, messagebox
+import random
+from wahoo_speed_sensor import WahooSpeedSensor
+from wahoo_kickr_fan import WahooKICKRFan
+
+# Global variables for fan control
+fan_intensity = 0
+
+# Simulated temperature sensor reading function
+def read_temperature():
+    return round(random.uniform(15, 30), 1)
+
+# Function to increase temperature (placeholder)
+def increase_temperature():
+    pass
+
+# Function to decrease temperature (placeholder)
+def decrease_temperature():
+    pass
+
+# Function to control the fan based on speed
+def control_fan():
+    global fan_intensity
+    wahoo_fan.set_intensity(fan_intensity)
+
+# Function to set fan intensity
+def set_fan_intensity(intensity):
+    global fan_intensity
+    fan_intensity = intensity
+    control_fan()
+    root.after(1000, refresh_data)
+
+# Function to read speed data from the sensor
+def read_speed_data():
+    speed = wahoo_sensor.get_speed()
+    speed_label.config(text=f"Speed: {speed} km/h")
+
+# Function to map speed to fan intensity
+def map_speed_to_fan_intensity(speed):
+    return min(int(speed / 10), 4)
+
+# Function to refresh data
+def refresh_data():
+    current_temperature = read_temperature()
+    current_wind_speed = wahoo_sensor.get_speed()
+    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C")
+    wind_speed_label.config(text=f"Wind Speed: {current_wind_speed:.1f} km/h")
+    fan_label.config(text=f"Fan Intensity: Level {fan_intensity}")
+
+# Function to exit the application
+def exit_app():
+    confirmation = messagebox.askquestion("Exit", "Do you want to exit the Indoor cycling training program?")
+    if confirmation == "yes":
+        root.destroy()
+
+# Function to go back to the main menu
+def back_to_main_menu(window):
+    window.destroy()
+    root.deiconify()
+
+# Create a function for the MANUAL MODE pop-up window
+def manual_mode_window():
+    manual_window = Toplevel(root)
+    manual_window.title("Indoor cycling training program - MANUAL MODE")
+
+    manual_window.geometry("500x400")
+
+    welcome_label3 = Label(manual_window, text="MANUAL MODE", font=("Helvetica", 22))
+    welcome_label3.pack(pady=10)
+
+    increase_button = Button(manual_window, text="Increase Temperature", command=increase_temperature, bg="lightcoral", font=("Helvetica", 22))
+    increase_button.pack()
+    decrease_button = Button(manual_window, text="Decrease Temperature", command=decrease_temperature, bg="lightblue", font=("Helvetica", 22))
+    decrease_button.pack()
+    fan_level_label = Label(manual_window, text="Set Fan Intensity:", font=("Helvetica", 18))
+    fan_level_label.pack()
+    fan_level_0 = Button(manual_window, text="Level 0 - Fan off", command=lambda: set_fan_intensity(0), font=("Helvetica", 18))
+    fan_level_0.pack()
+    fan_level_1 = Button(manual_window, text="Level 1", command=lambda: set_fan_intensity(1), font=("Helvetica", 18))
+    fan_level_1.pack()
+    fan_level_2 = Button(manual_window, text="Level 2", command=lambda: set_fan_intensity(2), font=("Helvetica", 18))
+    fan_level_2.pack()
+    fan_level_3 = Button(manual_window, text="Level 3", command=lambda: set_fan_intensity(3), font=("Helvetica", 18))
+    fan_level_3.pack()
+    fan_level_4 = Button(manual_window, text="Level 4", command=lambda: set_fan_intensity(4), font=("Helvetica", 18))
+    fan_level_4.pack()
+
+    back_button = Button(manual_window, text="Back to Menu", command=lambda: back_to_main_menu(manual_window), font=("Helvetica", 18))
+    back_button.pack()
+
+# Create a function for the IMMERSIVE MODE pop-up window
+def immersive_mode_window():
+    immersive_window = Toplevel(root)
+    immersive_window.title("Indoor cycling training program - IMMERSIVE MODE")
+
+    immersive_window.geometry("500x400")
+
+    welcome_label3 = Label(immersive_window, text="IMMERSIVE MODE", font=("Helvetica", 22))
+    welcome_label3.pack(pady=10)
+
+    back_button = Button(immersive_window, text="Back to Menu", command=lambda: back_to_main_menu(immersive_window), font=("Helvetica", 18))
+    back_button.pack()
+
+# Create the main menu window
+root = tk.Tk()
+root.title("Indoor cycling training program - Main Menu")
+
+root.geometry("600x500")
+
+welcome_label = Label(root, text="Indoor cycling training program", font=("Helvetica", 22))
+welcome_label.pack(pady=10)
+
+temperature_label = Label(root, text="Temperature: N/A°C", font=("Helvetica", 22))
+temperature_label.pack()
+wind_speed_label = Label(root, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
+wind_speed_label.pack()
+fan_label = Label(root, text="Fan Intensity: Level 0", font=("Helvetica", 22))
+fan_label.pack()
+
+menu_bar = Menu(root)
+root.config(menu=menu_bar)
+
+menu_bar.add_cascade(label="Quit", command=exit_app)
+
+immersive_menu = Menu(menu_bar, tearoff=0)
+immersive_menu.add_command(label="Back to Menu", command=None)
+immersive_menu.add_command(label="Melbourne", command=None)
+immersive_menu.add_command(label="Sydney", command=None)
+immersive_menu.add_command(label="Perth", command=None)
+
+manual_menu = Menu(menu_bar, tearoff=0)
+manual_menu.add_command(label="Back to Menu", command=None)
+manual_menu.add_command(label="Set Temperature", command=None)
+fan_submenu = Menu(manual_menu, tearoff=0)
+fan_submenu.add_command(label="Level 0 - Fan off", command=lambda: set_fan_intensity(0))
+fan_submenu.add_command(label="Level 1", command=lambda: set_fan_intensity(1))
+fan_submenu.add_command(label="Level 2", command=lambda: set_fan_intensity(2))
+fan_submenu.add_command(label="Level 3", command=lambda: set_fan_intensity(3))
+fan_submenu.add_command(label="Level 4", command=lambda: set_fan_intensity(4))
+manual_menu.add_cascade(label="Set Fan", menu=fan_submenu)
+
+menu_bar.add_cascade(label="Immersive", menu=immersive_menu)
+menu_bar.add_cascade(label="Manual", menu=manual_menu)
+
+wahoo_sensor = WahooSpeedSensor()
+wahoo_fan = WahooKICKRFan()
+
+read_speed_data()
+
+root.mainloop()
