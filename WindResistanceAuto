@@ -1,11 +1,35 @@
 import tkinter as tk
 from tkinter import Label, Button, Toplevel, Menu, messagebox
 import random
-from wahoo_speed_sensor import WahooSpeedSensor
-from wahoo_kickr_fan import WahooKICKRFan
+#from wahoo_speed_sensor import WahooSpeedSensor
+#from wahoo_kickr_fan import WahooKICKRFan
 
 # Global variables for fan control
-fan_intensity = 0
+#fan_intensity = 0
+
+#------------------------------------------------------------------------------------
+# Function to calculate fan intensity based on current_wind_speed
+def calculate_fan_intensity(current_wind_speed):
+    if current_wind_speed == 0:
+        return 0  # Fan off
+    elif current_wind_speed > 0 and current_wind_speed <= 10:
+        return 1  # Level 1
+    elif current_wind_speed > 10 and current_wind_speed <= 25:
+        return 2  # Level 2
+    elif current_wind_speed > 25 and current_wind_speed <= 35:
+        return 3  # Level 3
+    else:
+        return 4  # Level 4
+
+# Set a test value for current_wind_speed
+current_wind_speed = 20  # You can change this value as needed
+
+# Calculate the fan intensity based on the current wind speed
+fan_intensity = calculate_fan_intensity(current_wind_speed)
+
+#----------------------------------------------------------------------------------------
+
+# Now you have the fan intensity level in the 'fan_intensity' variable
 
 # Simulated temperature sensor reading function
 def read_temperature():
@@ -20,9 +44,9 @@ def decrease_temperature():
     pass
 
 # Function to control the fan based on speed
-def control_fan():
-    global fan_intensity
-    wahoo_fan.set_intensity(fan_intensity)
+#def control_fan():
+    #global fan_intensity
+    #wahoo_fan.set_intensity(fan_intensity)
 
 # Function to set fan intensity
 def set_fan_intensity(intensity):
@@ -32,20 +56,29 @@ def set_fan_intensity(intensity):
     root.after(1000, refresh_data)
 
 # Function to read speed data from the sensor
-def read_speed_data():
-    speed = wahoo_sensor.get_speed()
-    speed_label.config(text=f"Speed: {speed} km/h")
+#def read_speed_data():
+    #speed = wahoo_sensor.get_speed()
+    #speed_label.config(text=f"Speed: {speed} km/h")
 
 # Function to map speed to fan intensity
 def map_speed_to_fan_intensity(speed):
     return min(int(speed / 10), 4)
 
 # Function to refresh data
+#def refresh_data():
+#    current_temperature = read_temperature()
+#    current_wind_speed = 10
+#    #current_wind_speed = wahoo_sensor.get_speed()
+#    temperature_label.config(text=f"Temperature: {current_temperature:.1f}\u00b0C")
+#    #wind_speed_label.config(text=f"Wind Speed: {current_wind_speed:.1f} km/h")
+#    fan_label.config(text=f"Fan Intensity: Level {fan_intensity}")
+#    # Function to refresh data
 def refresh_data():
     current_temperature = read_temperature()
-    current_wind_speed = wahoo_sensor.get_speed()
-    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C")
-    wind_speed_label.config(text=f"Wind Speed: {current_wind_speed:.1f} km/h")
+    #current_wind_speed = 30  # You can change this value as needed
+    fan_intensity = calculate_fan_intensity(current_wind_speed)
+    temperature_label.config(text=f"Temperature: {current_temperature:.1f}\u00b0C")
+    wind_speed_label.config(text=f"Wind Speed: {current_wind_speed} km/h")  # Updated wind speed
     fan_label.config(text=f"Fan Intensity: Level {fan_intensity}")
 
 # Function to exit the application
@@ -111,9 +144,10 @@ root.geometry("600x500")
 welcome_label = Label(root, text="Indoor cycling training program", font=("Helvetica", 22))
 welcome_label.pack(pady=10)
 
-temperature_label = Label(root, text="Temperature: N/A°C", font=("Helvetica", 22))
+temperature_label = Label(root, text="Temperature: N/A\u00b0C", font=("Helvetica", 22))
 temperature_label.pack()
-wind_speed_label = Label(root, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
+wind_speed_label = Label(root, text="Wind Speed: " + str(current_wind_speed) + " km/h", font=("Helvetica", 22))
+
 wind_speed_label.pack()
 fan_label = Label(root, text="Fan Intensity: Level 0", font=("Helvetica", 22))
 fan_label.pack()
@@ -143,9 +177,11 @@ manual_menu.add_cascade(label="Set Fan", menu=fan_submenu)
 menu_bar.add_cascade(label="Immersive", menu=immersive_menu)
 menu_bar.add_cascade(label="Manual", menu=manual_menu)
 
-wahoo_sensor = WahooSpeedSensor()
-wahoo_fan = WahooKICKRFan()
+#wahoo_sensor = WahooSpeedSensor()
+#wahoo_fan = WahooKICKRFan()
 
-read_speed_data()
+#read_speed_data()
+
+refresh_data()
 
 root.mainloop()
