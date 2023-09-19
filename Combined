@@ -1,99 +1,127 @@
+import tkinter as tk
+from tkinter import Label, Button, Toplevel, Menu, messagebox
 import random
-import time
 
-class HVACSystem:
-    def __init__(self):
-        self.temperature = 22  # Default temperature in Celsius
-        self.wind_speed = 0  # Default wind speed in mph
-        self.locations = ["Melbourne", "Sydney", "Brisbane", "Perth", "Adelaide"]
+# Simulated temperature sensor reading function
+def read_temperature():
+    # Simulate temperature readings in Celsius (replace with actual sensor reading)
+    return round(random.uniform(15, 30), 1)  # Rounded to one decimal place
 
-    def main_menu(self):
-        while True:
-            print("Main Menu:")
-            print("1. Immersive Mode")
-            print("2. Manual Mode")
-            print("0. Exit Program")
-            choice = input("Enter your choice (0/1/2): ")
+# Simulated wind speed reading function
+def read_wind_speed():
+    # Simulate wind speed readings in km/h (replace with actual sensor reading)
+    return round(random.uniform(0, 30), 1)  # Rounded to one decimal place
 
-            if choice == '1':
-                self.immersive_mode()
-            elif choice == '2':
-                self.manual_mode()
-            elif choice == '0':
-                print("Exiting the HVAC System. Goodbye!")
-                exit()
-            else:
-                print("Invalid choice. Please select 0, 1, or 2.")
+# Function to increase temperature (placeholder)
+def increase_temperature():
+    # Add code to control the temperature here (e.g., adjust heater)
+    pass
 
-    def immersive_mode(self):
-        while True:
-            print("Choose a location:")
-            for i, location in enumerate(self.locations, start=1):
-                print(f"{i}. {location}")
-            print("0. Back to Main Menu")
+# Function to decrease temperature (placeholder)
+def decrease_temperature():
+    # Add code to control the temperature here (e.g., adjust cooler)
+    pass
 
-            location_choice = input("Enter your choice (0-5): ")
+# Function to refresh data
+def refresh_data():
+    current_temperature = read_temperature()
+    current_wind_speed = read_wind_speed()
+    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C")
+    wind_speed_label.config(text=f"Wind Speed: {current_wind_speed:.1f} km/h")
 
-            if location_choice == '0':
-                break
-            elif location_choice.isdigit() and 1 <= int(location_choice) <= 5:
-                location_index = int(location_choice) - 1
-                self.location = self.locations[location_index]
-                self.update_weather()
-                self.display_status()
-            else:
-                print("Invalid choice. Please select a valid location (1-5) or 0 to go back.")
+# Function to exit the application
+def exit_app():
+    root.destroy()
 
-    def manual_mode(self):
-        while True:
-            print("Manual Mode:")
-            print("1. Set Temperature")
-            print("2. Set Wind Speed")
-            print("0. Back to Main Menu")
-            choice = input("Enter your choice (0/1/2): ")
+# Function to update temperature and wind speed data
+def update_data():
+    current_temperature = read_temperature()
+    current_wind_speed = read_wind_speed()
+    temperature_label.config(text=f"Room Temperature: {current_temperature:.1f}°C")
+    wind_speed_label.config(text=f"Room Wind Speed: {current_wind_speed:.1f} km/h")
+    root.after(5000, update_data)  # Austo update data every 5 second
 
-            if choice == '0':
-                break
-            elif choice == '1':
-                self.set_temperature()
-            elif choice == '2':
-                self.set_wind_speed()
-            else:
-                print("Invalid choice. Please select 0, 1, or 2.")
+# Create a function for the MANUAL MODE pop-up window
+def manual_mode_window():
+    manual_window = Toplevel(root)
+    manual_window.title("Indoor cycling training program - MANUAL MODE")
 
-    def set_temperature(self):
-        temperature_input = input("Enter desired temperature in Celsius (press Enter to go back): ")
-        if temperature_input.strip() == "":
-            return
-        try:
-            self.temperature = float(temperature_input)
-            print(f"Temperature set to {self.temperature:.2f}°C")
-        except ValueError:
-            print("Invalid input. Please enter a valid temperature.")
+    # Set the window size (adjust the values as needed)
+    manual_window.geometry("500x400")
 
-    def set_wind_speed(self):
-        wind_speed_input = input("Enter desired wind speed in mph (press Enter to go back): ")
-        if wind_speed_input.strip() == "":
-            return
-        try:
-            self.wind_speed = float(wind_speed_input)
-            print(f"Wind speed set to {self.wind_speed:.2f} mph")
-        except ValueError:
-            print("Invalid input. Please enter a valid wind speed.")
+    welcome_label3 = Label(manual_window, text="MANUAL MODE", font=("Helvetica", 22))
+    welcome_label3.pack(pady=10)  # Add some padding
+    welcome_label4 = Label(manual_window, text="--------------------------------------", font=("Helvetica", 22))
+    welcome_label4.pack(pady=10)  # Add some padding
 
-    def update_weather(self):
-        # Simulate fetching weather data for the selected location
-        self.temperature = random.uniform(18, 24)  # Simulate temperature range 18°C - 24°C
-        self.wind_speed = random.uniform(0, 16)  # Simulate wind speed range 0 - 16 mph
+    # Labels to display temperature and wind speed with the same font size as the main window
+    temperature_label = Label(manual_window, text="Temperature: N/A°C", font=("Helvetica", 22))
+    temperature_label.pack()
+    wind_speed_label = Label(manual_window, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
+    wind_speed_label.pack()
 
-    def display_status(self):
-        print(f"Weather in {self.location}:")
-        print(f"Temperature: {self.temperature:.2f}°C")
-        print(f"Wind Speed: {self.wind_speed:.2f} mph")
+    # Buttons with the same font size as the main window
+    increase_button = Button(manual_window, text="Increase Temperature", command=increase_temperature, bg="lightcoral", font=("Helvetica", 22))
+    increase_button.pack()
+    decrease_button = Button(manual_window, text="Decrease Temperature", command=decrease_temperature, bg="lightblue", font=("Helvetica", 22))
+    decrease_button.pack()
 
-    def run(self):
-        self.main_menu()
+    # Start updating data
+    update_data()
 
-if __name__ == "__main__":
-    hvac_system = HVACSystem()
-    hvac_system.run()
+def immersive_mode_window():
+    immersive_window = Toplevel(root)
+    immersive_window.title("Indoor cycling training program - IMMERSIVE MODE")
+
+    # Set the window size (adjust the values as needed)
+    immersive_window.geometry("500x400")  # Adjust the size as needed
+
+    # Add a line of text
+    instruction_label = Label(immersive_window, text="Please paste your code here :D", font=("Helvetica", 20))
+    instruction_label.pack()
+
+# Create the main menu window
+root = tk.Tk()
+root.title("Indoor cycling training program - Main Menu")
+
+# Set the window size
+root.geometry("600x500")
+
+# Add a welcome message at the top
+welcome_label = Label(root, text="Indoor cycling training program", font=("Helvetica", 22))
+welcome_label.pack(pady=10)  # Add some padding
+welcome_label2 = Label(root, text="----------------------------------------------------", font=("Helvetica", 22))
+welcome_label2.pack(pady=10)  # Add some padding
+
+# Labels to display temperature and wind speed
+temperature_label = Label(root, text="Temperature: N/A°C", font=("Helvetica", 22))
+temperature_label.pack()
+wind_speed_label = Label(root, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
+wind_speed_label.pack()
+
+# Create a menu bar
+menu_bar = Menu(root)
+root.config(menu=menu_bar)
+
+def exit_app():
+    confirmation = messagebox.askquestion("Exit", "Do you want to exit the Indoor cycling training program?")
+    if confirmation == "yes":
+        root.destroy()
+
+# Menu Bar
+menu_bar.add_cascade(label="Refresh Data", command=refresh_data)
+menu_bar.add_cascade(label="Exit Program", command=exit_app)
+
+# Button to open MANUAL MODE pop-up window
+manual_mode_button = Button(root, text="MANUAL MODE", command=manual_mode_window, bg="lightgreen", font=("Helvetica", 22))
+manual_mode_button.pack(side="left", padx=20)  # Adjust padx as needed
+
+# Button for IMMERSIVE MODE (placeholder)
+immersive_mode_button = Button(root, text="IMMERSIVE MODE", command=immersive_mode_window, bg="yellow", font=("Helvetica", 22))
+immersive_mode_button.pack(side="left", padx=20)  # Adjust padx as needed
+
+# Start updating data
+update_data()
+
+# Run the GUI
+root.mainloop()
