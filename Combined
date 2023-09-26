@@ -1,16 +1,27 @@
 import tkinter as tk
 from tkinter import Label, Button, Toplevel, Menu, messagebox
 import random
+import time
+import board
+import adafruit_dht
+
+dhtDevice = adafruit_dht.DHT22(board.D4)
+
+# Global variable to keep track of the main menu window
+main_menu_window = None
+
+# Function to generate random temperature and wind speed readings
+def generate_random_data():
+    return round(random.uniform(15, 30), 1), round(random.uniform(0, 30), 1)
 
 # Simulated temperature sensor reading function
 def read_temperature():
-    # Simulate temperature readings in Celsius (replace with actual sensor reading)
-    return round(random.uniform(15, 30), 1)  # Rounded to one decimal place
+    return dhtDevice.temperature
 
 # Simulated wind speed reading function
 def read_wind_speed():
-    # Simulate wind speed readings in km/h (replace with actual sensor reading)
-    return round(random.uniform(0, 30), 1)  # Rounded to one decimal place
+    _, wind_speed = generate_random_data()
+    return wind_speed
 
 # Function to increase temperature (placeholder)
 def increase_temperature():
@@ -26,28 +37,106 @@ def decrease_temperature():
 def refresh_data():
     current_temperature = read_temperature()
     current_wind_speed = read_wind_speed()
-    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C")
-    wind_speed_label.config(text=f"Wind Speed: {current_wind_speed:.1f} km/h")
+    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C", fg=get_temperature_color(current_temperature))
+    temperature_level_label.config(text=f"Temperature Level: {get_temperature_level(current_temperature)}", fg=get_temperature_color(current_temperature))
+    wind_label.config(text=f"Wind: {current_wind_speed:.1f} km/h", fg=get_wind_color(current_wind_speed))
+    wind_level_label.config(text=f"Wind Level: {get_wind_level(current_wind_speed)}", fg=get_wind_color(current_wind_speed))
 
 # Function to exit the application
 def exit_app():
-    root.destroy()
+    confirmation = messagebox.askquestion("Exit", "Do you want to exit the Indoor cycling training program?")
+    if confirmation == "yes":
+        root.destroy()
 
 # Function to update temperature and wind speed data
 def update_data():
     current_temperature = read_temperature()
     current_wind_speed = read_wind_speed()
-    temperature_label.config(text=f"Room Temperature: {current_temperature:.1f}°C")
-    wind_speed_label.config(text=f"Room Wind Speed: {current_wind_speed:.1f} km/h")
-    root.after(5000, update_data)  # Austo update data every 5 second
+    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C", fg=get_temperature_color(current_temperature))
+    temperature_level_label.config(text=f"Temperature Level: {get_temperature_level(current_temperature)}", fg=get_temperature_color(current_temperature))
+    wind_label.config(text=f"Wind: {current_wind_speed:.1f} km/h", fg=get_wind_color(current_wind_speed))
+    wind_level_label.config(text=f"Wind Level: {get_wind_level(current_wind_speed)}", fg=get_wind_color(current_wind_speed))
+    root.after(5000, update_data)  # Auto update data every 5 seconds
 
-# Create a function for the MANUAL MODE pop-up window
+# Add a function to determine the temperature level
+def get_temperature_level(temperature):
+    if temperature < 10:
+        return "Low"
+    elif 10 <= temperature <= 29:
+        return "Medium"
+    else:
+        return "High"
+
+# Add a function to determine the wind level
+def get_wind_level(wind_speed):
+    if wind_speed < 10:
+        return "Low"
+    elif 10 <= wind_speed <= 20:
+        return "Medium"
+    else:
+        return "High"
+
+# Add a function to get the text color based on temperature level
+def get_temperature_color(temperature):
+    if temperature < 10:
+        return "blue"
+    elif temperature > 29:
+        return "red"
+    else:
+        return "black"
+
+# Add a function to get the text color based on wind level
+def get_wind_color(wind_speed):
+    if wind_speed < 10:
+        return "blue"
+    elif wind_speed > 20:
+        return "red"
+    else:
+        return "black"
+
+# Function to open MANUAL MODE pop-up window
 def manual_mode_window():
+    global main_menu_window
+    if main_menu_window:
+        main_menu_window.destroy()
     manual_window = Toplevel(root)
     manual_window.title("Indoor cycling training program - MANUAL MODE")
 
     # Set the window size (adjust the values as needed)
-    manual_window.geometry("500x400")
+    manual_window.geometry("500x500")
+
+    # Generate random initial data
+    current_temperature = dhtDevice.temperature
+    current_wind_speed = generate_random_data()
+
+    # Create a menu bar in the manual mode window
+    manual_menu_bar = Menu(manual_window)
+    manual_window.config(menu=manual_menu_bar)
+
+    # Function to return to the main menu from manual mode window
+    def return_to_main_menu():
+        manual_window.destroy()
+        open_main_menu()
+
+    # Function placeholders for controlling heater and cooler
+    def turn_on_heater():
+        pass
+
+    def turn_off_heater():
+        pass
+
+    def turn_on_cooler():
+        pass
+
+    def turn_off_cooler():
+        pass
+
+    # Add a "Return to Main Menu" button to the menu bar
+    manual_menu_bar.add_command(label="Return to the Main Menu", command=return_to_main_menu)
+
+    # Menu Bar in Manual Mode
+    manual_menu_bar.add_cascade(label="Refresh Data", command=refresh_data)
+    manual_menu_bar.add_cascade(label="Exit Manual Mode", command=return_to_main_menu)
 
     welcome_label3 = Label(manual_window, text="MANUAL MODE", font=("Helvetica", 22))
     welcome_label3.pack(pady=10)  # Add some padding
@@ -55,30 +144,80 @@ def manual_mode_window():
     welcome_label4.pack(pady=10)  # Add some padding
 
     # Labels to display temperature and wind speed with the same font size as the main window
-    temperature_label = Label(manual_window, text="Temperature: N/A°C", font=("Helvetica", 22))
+    temperature_label = Label(manual_window, text=f"Temperature: {current_temperature:.1f}°C", font=("Helvetica", 22), fg=get_temperature_color(current_temperature))
     temperature_label.pack()
-    wind_speed_label = Label(manual_window, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
-    wind_speed_label.pack()
+    temperature_level_label = Label(manual_window, text=f"Temperature Level: {get_temperature_level(current_temperature)}", font=("Helvetica", 22), fg=get_temperature_color(current_temperature))
+    temperature_level_label.pack()
+    wind_label = Label(manual_window, text=f"Wind: {current_wind_speed:.1f} km/h", font=("Helvetica", 22), fg=get_wind_color(current_wind_speed))
+    wind_label.pack()
+    wind_level_label = Label(manual_window, text=f"Wind Level: {get_wind_level(current_wind_speed)}", font=("Helvetica", 22), fg=get_wind_color(current_wind_speed))
+    wind_level_label.pack()
 
-    # Buttons with the same font size as the main window
-    increase_button = Button(manual_window, text="Increase Temperature", command=increase_temperature, bg="lightcoral", font=("Helvetica", 22))
-    increase_button.pack()
-    decrease_button = Button(manual_window, text="Decrease Temperature", command=decrease_temperature, bg="lightblue", font=("Helvetica", 22))
-    decrease_button.pack()
+# Buttons for fan speed control on one line
+    fan_speed_frame = tk.Frame(manual_window)
+    fan_speed_frame.pack()
+    increase_button = Button(fan_speed_frame, text="+ Fan Speed", command=increase_temperature, bg="lightcoral", font=("Helvetica", 22))
+    increase_button.pack(side="left")
+    decrease_button = Button(fan_speed_frame, text="- Fan Speed", command=decrease_temperature, bg="lightblue", font=("Helvetica", 22))
+    decrease_button.pack(side="left")
+
+# Buttons for heater control on the second line
+    heater_frame = tk.Frame(manual_window)
+    heater_frame.pack()
+    turn_on_heater_button = Button(heater_frame, text="Turn on Heater", command=turn_on_heater, bg="lightcoral", font=("Helvetica", 22))
+    turn_on_heater_button.pack(side="left")
+    turn_off_heater_button = Button(heater_frame, text="Turn off Heater", command=turn_off_heater, bg="lightblue", font=("Helvetica", 22))
+    turn_off_heater_button.pack(side="left")
+
+# Buttons for cooler control on the third line
+    cooler_frame = tk.Frame(manual_window)
+    cooler_frame.pack()
+    turn_on_cooler_button = Button(cooler_frame, text="Turn on Cooler", command=turn_on_cooler, bg="lightcoral", font=("Helvetica", 22))
+    turn_on_cooler_button.pack(side="left")
+    turn_off_cooler_button = Button(cooler_frame, text="Turn off Cooler", command=turn_off_cooler, bg="lightblue", font=("Helvetica", 22))
+    turn_off_cooler_button.pack(side="left")
 
     # Start updating data
     update_data()
 
+# Function to open IMMERSIVE MODE pop-up window
 def immersive_mode_window():
+    global main_menu_window
+    if main_menu_window:
+        main_menu_window.destroy()
     immersive_window = Toplevel(root)
     immersive_window.title("Indoor cycling training program - IMMERSIVE MODE")
 
     # Set the window size (adjust the values as needed)
-    immersive_window.geometry("500x400")  # Adjust the size as needed
+    immersive_window.geometry("500x400")
+
+    # Create a menu bar in the immersive mode window
+    immersive_menu_bar = Menu(immersive_window)
+    immersive_window.config(menu=immersive_menu_bar)
+
+    # Function to return to the main menu from immersive mode window
+    def return_to_main_menu():
+        immersive_window.destroy()
+        open_main_menu()
+
+    # Add a "Return to Main Menu" button to the menu bar
+    immersive_menu_bar.add_command(label="Return to the Main Menu", command=return_to_main_menu)
+
+    # Menu Bar in Immersive Mode
+    immersive_menu_bar.add_cascade(label="Refresh Data", command=refresh_data)
+    immersive_menu_bar.add_cascade(label="Exit Program", command=exit_app)
 
     # Add a line of text
     instruction_label = Label(immersive_window, text="Please paste your code here :D", font=("Helvetica", 20))
     instruction_label.pack()
+
+# Function to open the main menu window
+def open_main_menu():
+    global main_menu_window
+    if main_menu_window:
+        main_menu_window.destroy()
+    root.deiconify()  # Show the main menu window
+    refresh_data()  # Refresh data when returning to the main menu
 
 # Create the main menu window
 root = tk.Tk()
@@ -93,20 +232,19 @@ welcome_label.pack(pady=10)  # Add some padding
 welcome_label2 = Label(root, text="----------------------------------------------------", font=("Helvetica", 22))
 welcome_label2.pack(pady=10)  # Add some padding
 
-# Labels to display temperature and wind speed
+# Labels to display temperature, temperature level, wind, and wind level
 temperature_label = Label(root, text="Temperature: N/A°C", font=("Helvetica", 22))
 temperature_label.pack()
-wind_speed_label = Label(root, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
-wind_speed_label.pack()
+temperature_level_label = Label(root, text="Temperature Level: N/A", font=("Helvetica", 22))
+temperature_level_label.pack()
+wind_label = Label(root, text="Wind: N/A km/h", font=("Helvetica", 22))
+wind_label.pack()
+wind_level_label = Label(root, text="Wind Level: N/A", font=("Helvetica", 22))
+wind_level_label.pack()
 
 # Create a menu bar
 menu_bar = Menu(root)
 root.config(menu=menu_bar)
-
-def exit_app():
-    confirmation = messagebox.askquestion("Exit", "Do you want to exit the Indoor cycling training program?")
-    if confirmation == "yes":
-        root.destroy()
 
 # Menu Bar
 menu_bar.add_cascade(label="Refresh Data", command=refresh_data)
