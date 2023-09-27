@@ -4,6 +4,13 @@ import random
 import time
 import board
 import adafruit_dht
+import gpiozero
+import gatt
+import pygatt
+
+# Create relay objects for GPIO 25 and GPIO 19
+relay_25 = gpiozero.OutputDevice(25)
+relay_19 = gpiozero.OutputDevice(19)
 
 # Initialize the DHT22 temperature and humidity sensor
 dhtDevice = adafruit_dht.DHT22(board.D4)
@@ -14,9 +21,25 @@ main_menu_window = None
 # Global variable for location data label
 location_data_label = None
 
+# Initialize target temperature
+target_temperature = 17.00
+
+# Global variable for fan intensity
+fan_intensity = 0
+
+# Global variable for manual fan intensity
+manual_fan_intensity = 0
+
 # Function to generate random temperature and wind speed readings
 def generate_random_data():
     return round(random.uniform(15, 30), 1), round(random.uniform(0, 30), 1)
+
+def read_target():
+    try:
+        return dhtDevice.temperature
+    except RuntimeError as e:
+        print(f"Error reading temperature: {e}")
+        return None
 
 # Simulated temperature sensor reading function
 def read_temperature():
@@ -26,19 +49,41 @@ def read_temperature():
         print(f"Error reading temperature: {e}")
         return None
 
+# Function to update the target temperature label
+def update_target_temperature_label():
+    global target_temperature_label
+    target_temperature_label.config(text=f"Target Temperature: {target_temperature:.2f}°C")
+
 # Simulated wind speed reading function
 def read_wind_speed(fan_intensity):
     return current_wind_speed(fan_intensity)
 
 # Function to increase temperature (placeholder)
 def increase_temperature():
-    # Add code to control the temperature here (e.g., adjust heater)
-    pass
+    global target_temperature
+    target_temperature += 0.10
+    update_target_temperature_label()
 
 # Function to decrease temperature (placeholder)
 def decrease_temperature():
-    # Add code to control the temperature here (e.g., adjust cooler)
-    pass
+    global target_temperature
+    target_temperature -= 0.10
+    update_target_temperature_label()
+
+# Function to set fan intensity based on the selected speed
+def set_fan_intensity(speed):
+    global fan_intensity
+    fan_intensity = speed
+    update_data()
+
+    # Function to set manual fan intensity based on the selected speed
+def set_manual_fan_intensity(speed):
+    global manual_fan_intensity
+    manual_fan_intensity = speed
+    # Update the fan intensity label
+    fan_intensity_label.config(text=f"Fan Intensity: {manual_fan_intensity}", fg="black")
+    # Update the data
+    update_data()
 
 # Set a test value for currentCadence
 currentCadence = 0  # You can change this value as needed
@@ -76,6 +121,7 @@ def refresh_data():
     current_wind_speed_value = read_wind_speed(fan_intensity)
     temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C", fg=get_temperature_color(current_temperature))
     temperature_level_label.config(text=f"Temperature Level: {get_temperature_level(current_temperature)}", fg=get_temperature_color(current_temperature))
+    fan_intensity_label.config(text=f"Fan Intensity: {fan_intensity}", fg="black")
     wind_label.config(text=f"Wind: {current_wind_speed_value:.1f} km/h", fg=get_wind_color(current_wind_speed_value))
     wind_level_label.config(text=f"Wind Level: {get_wind_level(current_wind_speed_value)}", fg=get_wind_color(current_wind_speed_value))
 
@@ -99,11 +145,24 @@ def update_data():
     if current_temperature is not None:
         last_valid_temperature = current_temperature  # Update the last valid temperature
 
+        # Control relays based on temperature conditions
+        if current_temperature > target_temperature + 0.5:
+            relay_25.on()  # Activate relay on GPIO 25
+        else:
+            relay_25.off()  # Deactivate relay on GPIO 25
+
+        if current_temperature < target_temperature - 0.5:
+            relay_19.on()  # Activate relay on GPIO 19
+        else:
+            relay_19.off()  # Deactivate relay on GPIO 19
+
     # Use the last valid temperature value or display "N/A" if no valid value is available
     temperature_label.config(text=f"Temperature: {last_valid_temperature:.1f}°C" if last_valid_temperature is not None else "Temperature: N/A", fg=get_temperature_color(last_valid_temperature))
     temperature_level_label.config(text=f"Temperature Level: {get_temperature_level(last_valid_temperature)}", fg=get_temperature_color(last_valid_temperature))
+    fan_intensity_label.config(text=f"Fan Intensity: {fan_intensity}", fg="black")
     wind_label.config(text=f"Wind: {current_wind_speed_value:.1f} km/h", fg=get_wind_color(current_wind_speed_value))
     wind_level_label.config(text=f"Wind Level: {get_wind_level(current_wind_speed_value)}", fg=get_wind_color(current_wind_speed_value))
+
     root.after(5000, update_data)  # Auto update data every 5 seconds
 
 # Add a function to determine the temperature level
@@ -158,9 +217,8 @@ def manual_mode_window():
     manual_window.geometry("500x500")
 
     # Generate random initial data
+    target_temperature = read_target()
     current_temperature = read_temperature()
-    fan_intensity = calculate_fan_intensity(currentCadence)  # Get fan intensity based on currentCadence
-    current_wind_speed_value = current_wind_speed(fan_intensity)  # Calculate wind speed based on fan intensity
 
     welcome_label3 = Label(manual_window, text="MANUAL MODE", font=("Helvetica", 22))
     welcome_label3.pack(pady=10)  # Add some padding
@@ -174,12 +232,21 @@ def manual_mode_window():
     global temperature_level_label  # Declare it as global
     temperature_level_label = Label(manual_window, text=f"Temperature Level: {get_temperature_level(current_temperature)}", font=("Helvetica", 22), fg=get_temperature_color(current_temperature))
     temperature_level_label.pack()
+    # Label for displaying target temperature
+    global target_temperature_label
+    target_temperature_label = Label(manual_window, text=f"Target Temperature: {target_temperature:.2f}°C", font=("Helvetica", 18))
+    target_temperature_label.pack()
+    global fan_intensity_label  # Declare it as global
+    fan_intensity_label = Label(manual_window, text=f"Fan Intensity: 0", font=("Helvetica", 18), fg="black")
+    fan_intensity_label.pack()
+    # Label for displaying wind speed
     global wind_label  # Declare it as global
-    wind_label = Label(manual_window, text=f"Wind: {current_wind_speed_value:.1f} km/h", font=("Helvetica", 22), fg=get_wind_color(current_wind_speed_value))
+    wind_label = Label(manual_window, text="Wind: 0 km/h", font=("Helvetica", 22), fg="black")
     wind_label.pack()
-    global wind_level_label  # Declare it as global
-    wind_level_label = Label(manual_window, text=f"Wind Level: {get_wind_level(current_wind_speed_value)}", font=("Helvetica", 22), fg=get_wind_color(current_wind_speed_value))
-    wind_level_label.pack()
+
+    # Function to update the fan intensity label
+    def update_fan_intensity_label(value):
+        fan_intensity_label.config(text=f"Fan Intensity: {value}")
 
     # Buttons for fan speed control on one line
     fan_speed_frame = tk.Frame(manual_window)
@@ -189,21 +256,11 @@ def manual_mode_window():
     decrease_button = Button(fan_speed_frame, text="- Temperature", command=decrease_temperature, bg="lightblue", font=("Helvetica", 22))
     decrease_button.pack(side="left")
 
-    # Buttons for heater control on the second line
-    heater_frame = tk.Frame(manual_window)
-    heater_frame.pack()
-    turn_on_heater_button = Button(heater_frame, text="Turn on Heater", command=turn_on_heater, bg="lightcoral", font=("Helvetica", 22))
-    turn_on_heater_button.pack(side="left")
-    turn_off_heater_button = Button(heater_frame, text="Turn off Heater", command=turn_off_heater, bg="lightblue", font=("Helvetica", 22))
-    turn_off_heater_button.pack(side="left")
-
-    # Buttons for cooler control on the third line
-    cooler_frame = tk.Frame(manual_window)
-    cooler_frame.pack()
-    turn_on_cooler_button = Button(cooler_frame, text="Turn on Cooler", command=turn_on_cooler, bg="lightcoral", font=("Helvetica", 22))
-    turn_on_cooler_button.pack(side="left")
-    turn_off_cooler_button = Button(cooler_frame, text="Turn off Cooler", command=turn_off_cooler, bg="lightblue", font=("Helvetica", 22))
-    turn_off_cooler_button.pack(side="left")
+    # Buttons for fan speeds
+    fan_speed_buttons = []
+    for speed in range(5):
+        button = Button(manual_window, text=f"Fan Speed {speed}", command=lambda s=speed: update_fan_intensity_label(s), bg="lightblue", font=("Helvetica", 18))
+        button.pack()
 
     # Start updating data
     update_data()
@@ -259,8 +316,6 @@ def immersive_mode_window():
     location_data_label = Label(immersive_window, text="", font=("Helvetica", 18))
     location_data_label.pack()
 
-
-
 # Placeholder function for displaying location data
 def display_location_data(location_name):
     global location_data_label  # Declare it as global to modify the outer variable
@@ -273,11 +328,11 @@ def display_location_data(location_name):
 
             location_data_label.config(
                 text=f"Location: {location_name}\n"
-                    f"New York City Temperature: {nyc_temp}°C\n"
-                    f"Current Temperature: {current_temperature:.1f}°C\n"
-                    f"Temperature Level: {get_temperature_level(current_temperature)}\n"
-                    f"Wind Speed: {read_wind_speed(calculate_fan_intensity(currentCadence)):.1f} km/h\n"
-                    f"Wind Level: {wind_level}"
+                     f"New York City Temperature: {nyc_temp}°C\n"
+                     f"Current Temperature: {current_temperature:.1f}°C\n"
+                     f"Temperature Level: {get_temperature_level(current_temperature)}\n"
+                     f"Fan Intensity: {calculate_fan_intensity(currentCadence)}\n"
+                     f"Wind Level: {wind_level}"
             )
         else:
             # For other locations, fetch dynamic data
@@ -286,37 +341,14 @@ def display_location_data(location_name):
 
             location_data_label.config(
                 text=f"Location: {location_name}\n"
-                    f"{location_name} Temperature: {current_temperature:.1f}°C\n" #replace with location_temp
-                    f"Current Temperature: {current_temperature:.1f}°C\n"
-                    f"Temperature Level: {get_temperature_level(current_temperature)}\n"
-                    f"Wind Speed: {read_wind_speed(calculate_fan_intensity(currentCadence)):.1f} km/h\n"
-                    f"Wind Level: {wind_level}"
+                     f"{location_name} Temperature: {current_temperature:.1f}°C\n"  # replace with location_temp
+                     f"Current Temperature: {current_temperature:.1f}°C\n"
+                     f"Temperature Level: {get_temperature_level(current_temperature)}\n"
+                     f"Fan Intensity: {calculate_fan_intensity(currentCadence)}\n"
+                     f"Wind Level: {wind_level}"
             )
     else:
         print("Error: location_data_label is not properly initialized.")
-    # if location_data_label is not None:  # Check if the label is properly initialized
-    #     if location_name == "New York City":
-    #         nyc_temp = 13  # Fixed temperature for New York City
-    #         location_data_label.config(
-    #             text=f"Location: {location_name}\n"
-    #                 f"New York City Temperature: {nyc_temp}°C\n"
-    #                 f"Current Temperature:\n"
-    #                 f"Temperature Level:\n"
-    #                 f"Wind:\n"
-    #                 f"Wind Level:"
-    #         )
-    #     else:
-    #         location_data_label.config(
-    #             text=f"Location: {location_name}\n"
-    #                 f"{location_name} Temperature: N/A\n"
-    #                 f"Current Temperature: N/A\n"
-    #                 f"Temperature Level: N/A\n"
-    #                 f"Wind Speed: N/A km/h\n"
-    #                 f"Wind Level: N/A"
-    #         )
-    # else:
-    #     print("Error: location_data_label is not properly initialized.")
-
 
 # Function to open the main menu window
 def open_main_menu():
@@ -336,6 +368,8 @@ temperature_label = Label(root, text="Temperature: N/A", font=("Helvetica", 22),
 temperature_label.pack(pady=10)  # Add some padding
 temperature_level_label = Label(root, text="Temperature Level: N/A", font=("Helvetica", 22), fg="black")
 temperature_level_label.pack(pady=10)  # Add some padding
+fan_intensity_label = Label(root, text="Fan Intensity: N/A", font=("Helvetica", 22), fg="black")
+fan_intensity_label.pack(pady=10)  # Add some padding
 wind_label = Label(root, text="Wind: N/A", font=("Helvetica", 22), fg="black")
 wind_label.pack(pady=10)  # Add some padding
 wind_level_label = Label(root, text="Wind Level: N/A", font=("Helvetica", 22), fg="black")
