@@ -7,6 +7,16 @@ import random
 # Global variables for fan control
 #fan_intensity = 0
 
+# Replace with the actual MAC address and UUIDs of your cadence sensor
+cadence_sensor_mac_address = "CA:02:5E:1F:54:63"
+cadence_service_uuid = "00001816-0000-1000-8000-00805f9b34fb"
+cadence_measurement_uuid = "00002a5b-0000-1000-8000-00805f9b34fb"
+
+# Replace with the actual MAC address and UUIDs of your KICKR fan
+kickr_fan_mac_address = "DE:AD:BE:EF:12:34"
+kickr_fan_service_uuid = "00001802-0000-1000-8000-00805f9b34fb"
+kickr_fan_control_uuid = "00002a06-0000-1000-8000-00805f9b34fb"
+
 #------------------------------------------------------------------------------------
 # Function to calculate fan intensity based on current_wind_speed
 def calculate_fan_intensity(current_wind_speed):
