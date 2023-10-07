@@ -1,85 +1,127 @@
-import RPi.GPIO as GPIO 
+import tkinter as tk
+from tkinter import Label, Button, Toplevel, Menu, messagebox
+import random
 
-import time 
+# Simulated temperature sensor reading function
+def read_temperature():
+    # Simulate temperature readings in Celsius (replace with actual sensor reading)
+    return round(random.uniform(15, 30), 1)  # Rounded to one decimal place
 
- 
+# Simulated wind speed reading function
+def read_wind_speed():
+    # Simulate wind speed readings in km/h (replace with actual sensor reading)
+    return round(random.uniform(0, 30), 1)  # Rounded to one decimal place
 
-# Setup GPIO mode 
+# Function to increase temperature (placeholder)
+def increase_temperature():
+    # Add code to control the temperature here (e.g., adjust heater)
+    pass
 
-GPIO.setmode(GPIO.BCM)  
+# Function to decrease temperature (placeholder)
+def decrease_temperature():
+    # Add code to control the temperature here (e.g., adjust cooler)
+    pass
 
-# Define GPIO pins for input and output 
+# Function to refresh data
+def refresh_data():
+    current_temperature = read_temperature()
+    current_wind_speed = read_wind_speed()
+    temperature_label.config(text=f"Temperature: {current_temperature:.1f}°C")
+    wind_speed_label.config(text=f"Wind Speed: {current_wind_speed:.1f} km/h")
 
-button_pin = 17  # Example, you need to edit 
+# Function to exit the application
+def exit_app():
+    root.destroy()
 
-led_pin = 18  # Example, you need to edit  
+# Function to update temperature and wind speed data
+def update_data():
+    current_temperature = read_temperature()
+    current_wind_speed = read_wind_speed()
+    temperature_label.config(text=f"Room Temperature: {current_temperature:.1f}°C")
+    wind_speed_label.config(text=f"Room Wind Speed: {current_wind_speed:.1f} km/h")
+    root.after(5000, update_data)  # Austo update data every 5 second
 
-# Set up GPIO pins 
+# Create a function for the MANUAL MODE pop-up window
+def manual_mode_window():
+    manual_window = Toplevel(root)
+    manual_window.title("Indoor cycling training program - MANUAL MODE")
 
-GPIO.setup(button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+    # Set the window size (adjust the values as needed)
+    manual_window.geometry("500x400")
 
-GPIO.setup(led_pin, GPIO.OUT) 
+    welcome_label3 = Label(manual_window, text="MANUAL MODE", font=("Helvetica", 22))
+    welcome_label3.pack(pady=10)  # Add some padding
+    welcome_label4 = Label(manual_window, text="--------------------------------------", font=("Helvetica", 22))
+    welcome_label4.pack(pady=10)  # Add some padding
 
-GPIO.output(led_pin, GPIO.LOW) 
+    # Labels to display temperature and wind speed with the same font size as the main window
+    temperature_label = Label(manual_window, text="Temperature: N/A°C", font=("Helvetica", 22))
+    temperature_label.pack()
+    wind_speed_label = Label(manual_window, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
+    wind_speed_label.pack()
 
-class Modes: 
+    # Buttons with the same font size as the main window
+    increase_button = Button(manual_window, text="Increase Temperature", command=increase_temperature, bg="lightcoral", font=("Helvetica", 22))
+    increase_button.pack()
+    decrease_button = Button(manual_window, text="Decrease Temperature", command=decrease_temperature, bg="lightblue", font=("Helvetica", 22))
+    decrease_button.pack()
 
-    IMMERSION = 1 
+    # Start updating data
+    update_data()
 
-    MANUAL = 2  
+def immersive_mode_window():
+    immersive_window = Toplevel(root)
+    immersive_window.title("Indoor cycling training program - IMMERSIVE MODE")
 
-# SIMPLE GUI 
+    # Set the window size (adjust the values as needed)
+    immersive_window.geometry("500x400")  # Adjust the size as needed
 
-print("WIND RESISTANCE") 
+    # Add a line of text
+    instruction_label = Label(immersive_window, text="Please paste your code here :D", font=("Helvetica", 20))
+    instruction_label.pack()
 
-print("1. IMMERSION") 
+# Create the main menu window
+root = tk.Tk()
+root.title("Indoor cycling training program - Main Menu")
 
-print("2. MANUAL") 
+# Set the window size
+root.geometry("600x500")
 
-# Get User Input 
+# Add a welcome message at the top
+welcome_label = Label(root, text="Indoor cycling training program", font=("Helvetica", 22))
+welcome_label.pack(pady=10)  # Add some padding
+welcome_label2 = Label(root, text="----------------------------------------------------", font=("Helvetica", 22))
+welcome_label2.pack(pady=10)  # Add some padding
 
-mode_choice = input("User Input:") 
+# Labels to display temperature and wind speed
+temperature_label = Label(root, text="Temperature: N/A°C", font=("Helvetica", 22))
+temperature_label.pack()
+wind_speed_label = Label(root, text="Wind Speed: N/A km/h", font=("Helvetica", 22))
+wind_speed_label.pack()
 
-# User Choice and beyond 
+# Create a menu bar
+menu_bar = Menu(root)
+root.config(menu=menu_bar)
 
-if mode_choice == str(Modes.IMMERSION): 
+def exit_app():
+    confirmation = messagebox.askquestion("Exit", "Do you want to exit the Indoor cycling training program?")
+    if confirmation == "yes":
+        root.destroy()
 
-    print("IMMERSION Mode Selected.") 
+# Menu Bar
+menu_bar.add_cascade(label="Refresh Data", command=refresh_data)
+menu_bar.add_cascade(label="Exit Program", command=exit_app)
 
-    # Insert IMMERSION mode code below 
+# Button to open MANUAL MODE pop-up window
+manual_mode_button = Button(root, text="MANUAL MODE", command=manual_mode_window, bg="lightgreen", font=("Helvetica", 22))
+manual_mode_button.pack(side="left", padx=20)  # Adjust padx as needed
 
-    pass 
+# Button for IMMERSIVE MODE (placeholder)
+immersive_mode_button = Button(root, text="IMMERSIVE MODE", command=immersive_mode_window, bg="yellow", font=("Helvetica", 22))
+immersive_mode_button.pack(side="left", padx=20)  # Adjust padx as needed
 
-elif mode_choice == str(Modes.MANUAL): 
+# Start updating data
+update_data()
 
-    print("Manual Mode Selected.") 
-
-    wind_resistance = input("Enter required wind resistance: ") 
-
-    try: 
-
-        wind_resistance = int(wind_resistance) 
-
-        if 0 <= wind_resistance <= 3: 
-
-            print(f"Wind resistance: {wind_resistance}.") 
-
-            GPIO.output(led_pin, GPIO.HIGH) 
-
-            time.sleep(2)  # Turn on the LED for 2 seconds 
-
-            GPIO.output(led_pin, GPIO.LOW) 
-
-        else: 
-
-            print("Invalid input") 
-
-    except ValueError: 
-
-        print("Invalid input") 
-
-else: 
-
-    print("Invalid mode")  
-
-GPIO.cleanup() 
+# Run the GUI
+root.mainloop()
