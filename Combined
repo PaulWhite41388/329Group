@@ -5,8 +5,6 @@ import time
 import board
 import adafruit_dht
 import gpiozero
-import gatt
-import pygatt
 
 # Create relay objects for GPIO 25 and GPIO 19
 relay_25 = gpiozero.OutputDevice(25)
@@ -29,6 +27,16 @@ fan_intensity = 0
 
 # Global variable for manual fan intensity
 manual_fan_intensity = 0
+
+# Replace with the MAC address and UUIDs of your cadence sensor
+cadence_sensor_mac_address = "CA:02:5E:1F:54:63"
+cadence_service_uuid = "00001816-0000-1000-8000-00805f9b34fb"
+cadence_measurement_uuid = "00002a5b-0000-1000-8000-00805f9b34fb"
+
+# Replace with the MAC address and UUIDs of your KICKR fan
+kickr_fan_mac_address = "DE:AD:BE:EF:12:34"
+kickr_fan_service_uuid = "00001802-0000-1000-8000-00805f9b34fb"
+kickr_fan_control_uuid = "00002a06-0000-1000-8000-00805f9b34fb"
 
 # Function to generate random temperature and wind speed readings
 def generate_random_data():
@@ -322,7 +330,8 @@ def display_location_data(location_name):
     
     if location_data_label is not None:  # Check if the label is properly initialized
         if location_name == "New York City":
-            nyc_temp = 13  # Fixed temperature for New York City
+            nyc_temp = 15.8
+            target_temperature = 10.0
             current_temperature = read_temperature()
             wind_level = get_wind_level(read_wind_speed(calculate_fan_intensity(currentCadence)))
 
@@ -334,14 +343,29 @@ def display_location_data(location_name):
                      f"Fan Intensity: {calculate_fan_intensity(currentCadence)}\n"
                      f"Wind Level: {wind_level}"
             )
-        else:
+        if location_name == "Melbourne":
+            melbourne_temp = 26.4
             # For other locations, fetch dynamic data
             current_temperature = read_temperature()
             wind_level = get_wind_level(read_wind_speed(calculate_fan_intensity(currentCadence)))
 
             location_data_label.config(
                 text=f"Location: {location_name}\n"
-                     f"{location_name} Temperature: {current_temperature:.1f}°C\n"  # replace with location_temp
+                     f"Melbourne Temperature: {melbourne_temp}°C\n"
+                     f"Current Temperature: {current_temperature:.1f}°C\n"
+                     f"Temperature Level: {get_temperature_level(current_temperature)}\n"
+                     f"Fan Intensity: {calculate_fan_intensity(currentCadence)}\n"
+                     f"Wind Level: {wind_level}"
+            )
+        if location_name == "Sydney":
+            sydney_temp = 21.2
+            # For other locations, fetch dynamic data
+            current_temperature = read_temperature()
+            wind_level = get_wind_level(read_wind_speed(calculate_fan_intensity(currentCadence)))
+
+            location_data_label.config(
+                text=f"Location: {location_name}\n"
+                     f"Sydney Temperature: {sydney_temp}°C\n"
                      f"Current Temperature: {current_temperature:.1f}°C\n"
                      f"Temperature Level: {get_temperature_level(current_temperature)}\n"
                      f"Fan Intensity: {calculate_fan_intensity(currentCadence)}\n"
@@ -362,6 +386,90 @@ def open_main_menu():
 root = tk.Tk()
 root.title("Indoor Cycling Training Program")
 root.geometry("800x600")
+
+# Function to fetch temperature based on location using an API
+
+def get_temperature():
+
+    location = location_var.get()
+
+    if location:
+
+        # Define API endpoints and keys for each location
+
+        api_endpoints = {
+
+    'Sydney': {
+
+        'endpoint': 'https://api.weatherbit.io/v2.0/current?lat=-33.865143&lon=151.209900',
+
+        'api_key': 'c293fe119570482c825be33566ccfdf6',  
+
+    },
+
+    'Melbourne': {
+
+        'endpoint': 'https://api.weatherbit.io/v2.0/current?lat=-37.840935&lon=-144.946457',
+
+        'api_key': 'c293fe119570482c825be33566ccfdf6',  
+
+    },
+
+    'Gold Coast': {
+
+        'endpoint': 'https://api.weatherbit.io/v2.0/current?lat=-28.016666&lon=153.399994',
+
+        'api_key': 'c293fe119570482c825be33566ccfdf6',  
+
+    },
+
+}
+
+ 
+
+ 
+
+        # Get the API endpoint and key for the selected location
+
+        selected_location = api_endpoints.get(location)
+
+ 
+
+        if selected_location:
+
+            api_key = selected_location['api_key']
+
+            api_endpoint = selected_location['endpoint']
+
+ 
+
+            # Construct the API request URL
+
+            url = f'{api_endpoint}?key={api_key}&units=metric'  # Use metric units for Celsius
+
+ 
+
+            try:
+
+                response = requests.get(url)
+
+                data = response.json()
+
+                temperatures = data['main']['temp']
+
+                temperature_label.config(text=f'Temperature in {location}: {temperatures}°C')
+
+            except Exception as e:
+
+                temperatures_label.config(text='Error fetching temperature')
+
+        else:
+
+            temperatures_label.config(text='Invalid location')
+
+    else:
+
+        temperatures_label.config(text='Please select a location')
 
 # Labels to display temperature and wind speed
 temperature_label = Label(root, text="Temperature: N/A", font=("Helvetica", 22), fg="black")
